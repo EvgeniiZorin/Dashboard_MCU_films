@@ -5,6 +5,8 @@ from dash import Dash, dcc, html, Input, Output
 
 app = Dash(__name__)
 
+server = app.server
+
 
 # ------------------------------------------------------------------------------
 # --- Import and clean data (importing csv into pandas) ------------------------
