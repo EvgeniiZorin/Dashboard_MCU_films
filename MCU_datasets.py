@@ -10,7 +10,7 @@ server = app.server
 # ------------------------------------------------------------------------------
 # --- Import and clean data (importing csv into pandas) ------------------------
 # ------------------------------------------------------------------------------
-df = pd.read_csv('MCU_dataset.tsv', sep='\t', skiprows=2)
+df = pd.read_csv('https://raw.githubusercontent.com/EvgeniiZorin/MCU_films_dashboard/main/MCU_dataset.tsv', sep='\t', skiprows=2)
 
 
 df1 = df.copy()
