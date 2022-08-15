@@ -60,7 +60,7 @@ def director_scatter():
 	df2['Worldwide box office (bln)'] = df2['Worldwide box office (bln)'].round(2)
 	fig = px.scatter(
 		# df2, x='Date', y='Worldwide box office (bln)', 
-		df2, x='Director(s)', y='Worldwide box office (bln)',
+		df2, x='Director(s)', y='Worldwide box office (bln)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
 		# color='Director(s)',
 		text='Worldwide box office (bln)',
 		title='Graph 2: box office per movies of each director')
@@ -80,7 +80,7 @@ app.layout = html.Div([
 			{'label': 'Phase 3', 'value': 3}], 
 		value=[1, 2, 3]
 	), 
-	html.Div(id='output_choiceStr', children=[]), 
+	html.Div(id='output_choiceStr', children=[]), # You have chosen: 
 	html.Br(),
 	dcc.Graph(id='selectPhase_barplot', figure={}), 
 	#
@@ -102,10 +102,16 @@ def phase_lineplot(selectPhase):
 	df2 = df1.copy()
 	df2 = df2[df2['Phase'].isin(selectPhase)]
 	fig = px.line(
-		df2, x='Date', y='Worldwide box office (bln)', 
-		text='Film', title='Graph 1: box office for each movie per phase'
+		# df2, x='Date', y='Worldwide box office (bln)', color='Phase',
+		df2, x='Worldwide box office (bln)', y='Date', color='Phase', 
+		text='Film', title='Graph 1: box office for each movie per phase',
 	)
-	fig.update_traces(textposition='top center')
+	fig.update_layout(
+		height=1200, width=1000, 
+		# yaxis=dict(tickmode='linear', tick0=2008, dtick=1)
+	)
+	# fig.update_traces(textposition='middle right')
+	fig.update_yaxes(dtick="M12", tickformat="%Y")
 	yearZero = df2['Date'].min().strftime('%Y')
 	print(yearZero)
 	output_choiceStr = f"You have chosen: {sorted(selectPhase)}"
