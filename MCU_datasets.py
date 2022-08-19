@@ -63,26 +63,67 @@ def director_scatter():
 		df2, x='Director(s)', y='Worldwide box office (bln)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
 		# color='Director(s)',
 		text='Worldwide box office (bln)',
-		title='Graph 2: box office per movies of each director')
+		title='Graph 4: box office per movies of each director')
 	fig.update_traces(textposition='middle right')
+	return fig
+
+def director_scatter_vertical():
+	df2 = df1.copy()
+	df2['Worldwide box office (bln)'] = df2['Worldwide box office (bln)'].round(2)
+	fig = px.scatter(
+		df2, x='Worldwide box office (bln)', y='Director(s)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
+		# df2, x='Director(s)', y='Worldwide box office (bln)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
+		text='Worldwide box office (bln)',
+		title='Graph 1: box office per movies of each director', 
+		width=900, height=600)
+	fig.update_traces(textposition='middle right')
+	return fig
+
+def profit():
+	df2 = df1.copy()
+	df2['Phase'] = df2['Phase'].astype(str)
+	df2['Box office / budget'] = df2['Worldwide box office'] / df2['Production budget']
+	df2.sort_values(by='Box office / budget', ascending=True, inplace=True)
+	fig = px.bar(
+		df2, x='Box office / budget', y='Film', 
+		# color='Phase',
+		title='Graph 2: Most profitable movies (by box office / budget ratio) sorted in decreasing order',
+		width=900, height=600
+	)
 	return fig
 # ------------------------------------------------------------------------------
 
 
 
 app.layout = html.Div([
-	html.H1("Marvel Cinematic Universe movies", style={'text-align': 'center'}), 
+	html.H1("Marvel Cinematic Universe (MCU) movies", style={
+		'color':'white', 'background-color':'darkred',
+		'text-align': 'center'
+		}), 
+	html.H3('This is my personal dashboard project on visualising financial success of movies and different directors in the MCU', style={
+		'text-align':'center'
+	}),
+	dcc.Graph(id='static_1', figure=director_scatter_vertical(), style={
+		'display':'inline-block', 'width':'50%'
+		}),
+	dcc.Graph(id='static_2', figure=profit(), style={
+		'display':'inline-block', 'width':'50%'
+		}),
+	html.Br(),
 	dcc.Checklist(
 		id='selectPhase', 
 		options=[
 			{'label': 'Phase 1', 'value': 1}, 
 			{'label': 'Phase 2', 'value': 2}, 
 			{'label': 'Phase 3', 'value': 3}], 
-		value=[1, 2, 3]
+		value=[1, 2, 3], 
+		style={'text-align':'center'}
 	), 
-	html.Div(id='output_choiceStr', children=[]), # You have chosen: 
+	html.Div(id='output_choiceStr', children=[], style={'text-align':'center'}), # You have chosen: 
 	html.Br(),
-	dcc.Graph(id='selectPhase_barplot', figure={}), 
+	html.Div('', style={'display':'inline-block', 'width':'25%'}),
+	dcc.Graph(id='selectPhase_barplot', figure={}, style={'display':'inline-block', 'width':'65%'}), 
+	html.Div('', style={'display':'inline-block', 'width':'10%'}),
 	#
 	# html.Div(id='')
 	html.Br(), 
@@ -104,7 +145,7 @@ def phase_lineplot(selectPhase):
 	fig = px.line(
 		# df2, x='Date', y='Worldwide box office (bln)', color='Phase',
 		df2, x='Worldwide box office (bln)', y='Date', color='Phase', 
-		text='Film', title='Graph 1: box office for each movie per phase',
+		text='Film', title='Graph 3: box office for each movie per phase',
 	)
 	fig.update_layout(
 		height=1200, width=1000, 
