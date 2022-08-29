@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, dash_table
 
 app = Dash(__name__)
 server = app.server
@@ -28,6 +28,7 @@ df1['Production budget (mln)'] = df1['Production budget'] / 1000000
 df1['Worldwide box office'] = df1['Worldwide box office'].str.replace(',', '') 
 df1['Worldwide box office'] = df1['Worldwide box office'].astype(float)
 df1['Worldwide box office (bln)'] = df1['Worldwide box office'] / 1000000000
+df1['Worldwide box office (mln)'] = df1['Worldwide box office'] / 1000000
 # Let's create a new column with names of movies which have more than 1 bln box officce
 # df1['Film bln'] = df1['Worldwide box office'] > 1000000000
 df1['Film bln'] = ''
@@ -44,28 +45,22 @@ df1[['Phase', 'Saga']] = df1['Phase (Saga)'].str.split('(', expand=True)
 df1['Phase'] = df1['Phase'].str.replace(' ', '')
 df1['Phase'] = df1['Phase'].astype(int)
 df1['Saga'] = df1['Saga'].str.replace(')', '')
-print(df1.dtypes)
-df1
+
+
+# df1_display is the version for displaying in the dashboard
+df1_display = df1.copy()
+df1_display['Date_pretty'] = df1_display['Date'].dt.strftime('%d %b %Y')
+df1_display['Date_string'] = df1_display['Date'].astype(str)
+print(df1_display.columns)
+print(df1_display)
+
+
 
 
 # ------------------------------------------------------------------------------
-# --- App Layout ---------------------------------------------------------------
+# --- Define some static figures -----------------------------------------------
 # ------------------------------------------------------------------------------
 
-
-
-# --- Static figure ------------------------------------------------------------
-def director_scatter():
-	df2 = df1.copy()
-	df2['Worldwide box office (bln)'] = df2['Worldwide box office (bln)'].round(2)
-	fig = px.scatter(
-		# df2, x='Date', y='Worldwide box office (bln)', 
-		df2, x='Director(s)', y='Worldwide box office (bln)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
-		# color='Director(s)',
-		text='Worldwide box office (bln)',
-		title='Graph 4: box office per movies of each director')
-	fig.update_traces(textposition='middle right')
-	return fig
 
 def director_scatter_vertical():
 	df2 = df1.copy()
@@ -77,6 +72,9 @@ def director_scatter_vertical():
 		title='Graph 1: box office per movies of each director', 
 		width=900, height=600)
 	fig.update_traces(textposition='middle right')
+	# Disable zoom into graph
+	fig.update_xaxes(fixedrange=True)
+	fig.update_yaxes(fixedrange=True)
 	return fig
 
 def profit():
@@ -90,9 +88,15 @@ def profit():
 		title='Graph 2: Most profitable movies (by box office / budget ratio) sorted in decreasing order',
 		width=900, height=600
 	)
+	# Disable zoom into graph
+	fig.update_xaxes(fixedrange=True)
+	fig.update_yaxes(fixedrange=True)
 	return fig
-# ------------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
+# --- App Layout ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 app.layout = html.Div([
@@ -100,9 +104,29 @@ app.layout = html.Div([
 		'color':'white', 'background-color':'darkred',
 		'text-align': 'center'
 		}), 
-	html.H3('This is my personal dashboard project on visualising financial success of movies and different directors in the MCU', style={
-		'text-align':'center'
-	}),
+	# html.H3('This is my personal dashboard project on visualising financial success of movies and different directors in the MCU', style={
+	# 	'text-align':'center'
+	# }),
+	html.P(
+		"This is my personal project - a dashboard visualising statistics on financial success of movies and directors in the MCU.", 
+		style={'text-align':'center', 'font-size':'30px'}),
+	html.Div(
+		'Created by: Evgenii Zorin', 
+		style={'text-align':'center', 'font-size':'20px'}
+	),
+	html.Div([
+		html.A(
+		'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
+		target="_blank", # Open link in a new tab
+		# style={'textAlign':'center', 'font-size':'20px'}, 
+	),
+	], style={'font-size':'20px', "display": "flex", "justifyContent": "center"}),
+	# html.A(
+	# 	'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
+	# 	target="_blank", # Open link in a new tab
+	# 	style={'textAlign':'center', 'font-size':'20px'}, 
+	# ),
+	html.Br(),
 	dcc.Graph(id='static_1', figure=director_scatter_vertical(), style={
 		'display':'inline-block', 'width':'50%'
 		}),
@@ -110,6 +134,19 @@ app.layout = html.Div([
 		'display':'inline-block', 'width':'50%'
 		}),
 	html.Br(),
+	# dcc.Checklist(
+	# 	id='selectPhase', 
+	# 	options=[
+	# 		{'label': 'Phase 1', 'value': 1}, 
+	# 		{'label': 'Phase 2', 'value': 2}, 
+	# 		{'label': 'Phase 3', 'value': 3}], 
+	# 	value=[1, 2, 3], 
+	# 	style={'text-align':'center'}
+	# ), 
+	
+	# html.Br(),
+	# html.Div('', style={'display':'inline-block', 'width':'25%'}),
+	html.P('Graph 3: box office for each movie per phase', style={'text-align':'center', 'font-size':'25px'}), 
 	dcc.Checklist(
 		id='selectPhase', 
 		options=[
@@ -117,17 +154,38 @@ app.layout = html.Div([
 			{'label': 'Phase 2', 'value': 2}, 
 			{'label': 'Phase 3', 'value': 3}], 
 		value=[1, 2, 3], 
-		style={'text-align':'center'}
+		style={'text-align':'center', 'display':'inline-block', 'width':'30%'}
 	), 
-	html.Div(id='output_choiceStr', children=[], style={'text-align':'center'}), # You have chosen: 
+	# html.P('asdf', style={'display':'inline-block', 'width':'70%'}), 
+	html.Div(id='output_choiceStr', children=[], style={'display':'inline-block', 'width':'70%'}), # You have chosen: 
 	html.Br(),
-	html.Div('', style={'display':'inline-block', 'width':'25%'}),
-	dcc.Graph(id='selectPhase_barplot', figure={}, style={'display':'inline-block', 'width':'65%'}), 
-	html.Div('', style={'display':'inline-block', 'width':'10%'}),
+	dcc.Graph(id='selectPhase_barplot', figure={}),
+
+	# html.Div('', style={'display':'inline-block', 'width':'10%'}),
 	#
 	# html.Div(id='')
 	html.Br(), 
-	dcc.Graph(id='director_scatter', figure=director_scatter())
+	html.Div('Below you can see the full data table', style={'text-align':'center', 'font-size':'30px'}),
+	html.Br(),
+	dash_table.DataTable(
+		data=df1_display.to_dict('records'),
+		# columns=[{'name':i, 'id':i} for i in df1.columns()],
+		sort_action='native',
+		columns=[
+			{'name':'Date', 'id':'Date_string', 'type':'datetime'}, 
+			{'name':'Film', 'id':'Film'},
+			{'name':'Phase', 'id':'Phase'}, 
+			{'name':'Saga', 'id':'Saga'}, 
+			{'name':'Director(s)', 'id':'Director(s)'}, 
+			{'name':'Producer(s)', 'id': 'Producer(s)'},
+			{'name':'Production budget (mln)', 'id':'Production budget (mln)'}, 
+			{'name':'Worldwide box office (mln)', 'id':'Worldwide box office (mln)'}
+		],
+		# style_header={'backgroundColor':'rgb(30,30,30)', 'color':'white'},
+		# style_data={'backgroundColor':'rgb(50,50,50)', 'color':'white'}
+		style_header={'backgroundColor':'rgb(192,192,192)', 'text-align':'center'},
+		style_data={'backgroundColor':'rgb(224,224,224)', 'text-align':'center'}, 
+	)
 ])
 
 # ------------------------------------------------------------------------------
@@ -139,25 +197,52 @@ app.layout = html.Div([
 		Output(component_id='selectPhase_barplot', component_property='figure')], 
 	[Input(component_id='selectPhase', component_property='value')]
 )
-def phase_lineplot(selectPhase):
+# def phase_lineplot(selectPhase):
+# 	df2 = df1.copy()
+# 	df2 = df2[df2['Phase'].isin(selectPhase)]
+# 	fig = px.line(
+# 		# df2, x='Date', y='Worldwide box office (bln)', color='Phase',
+# 		df2, x='Worldwide box office (bln)', y='Date', color='Phase', 
+# 		text='Film', title='Graph 3: box office for each movie per phase',
+# 	)
+# 	fig.update_layout(
+# 		height=1200, width=1000, 
+# 		# yaxis=dict(tickmode='linear', tick0=2008, dtick=1)
+# 	)
+# 	# fig.update_traces(textposition='middle right')
+# 	fig.update_yaxes(dtick="M12", tickformat="%Y")
+# 	yearZero = df2['Date'].min().strftime('%Y')
+# 	print(yearZero)
+# 	output_choiceStr = f"You have chosen: {sorted(selectPhase)}"
+# 	return output_choiceStr, fig
+def phase_barplot(selectPhase):
 	df2 = df1.copy()
 	df2 = df2[df2['Phase'].isin(selectPhase)]
-	fig = px.line(
-		# df2, x='Date', y='Worldwide box office (bln)', color='Phase',
-		df2, x='Worldwide box office (bln)', y='Date', color='Phase', 
-		text='Film', title='Graph 3: box office for each movie per phase',
+	# print(df2.dtypes)
+	df2['Phase'] = df2['Phase'].astype(str) 
+	fig = px.bar(
+		df2, x='Date', y='Worldwide box office (bln)', color='Phase',
+		text='Film', 
+		# text_auto='.2s',
+		title='',
+		# color_discrete_sequence=["red", "green", "blue", "goldenrod", "magenta"],
 	)
 	fig.update_layout(
-		height=1200, width=1000, 
-		# yaxis=dict(tickmode='linear', tick0=2008, dtick=1)
+		height=500, width=1900, 
+		uniformtext_minsize=10, uniformtext_mode='hide' # uniformtext_mode = 'show', 'hide'
 	)
-	# fig.update_traces(textposition='middle right')
-	fig.update_yaxes(dtick="M12", tickformat="%Y")
+	fig.update_traces(
+		textposition='outside', 
+		# textangle=270
+		textangle=340
+	)
+	fig.update_xaxes(dtick="M12", tickformat="%Y")
+	fig.update_xaxes(fixedrange=True)
+	fig.update_yaxes(fixedrange=True)
 	yearZero = df2['Date'].min().strftime('%Y')
 	print(yearZero)
 	output_choiceStr = f"You have chosen: {sorted(selectPhase)}"
 	return output_choiceStr, fig
-
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
