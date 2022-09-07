@@ -2,11 +2,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, dash_table
+import dash_bootstrap_components as dbc
 
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
-
+app.config['suppress_callback_exceptions'] = True
 # ------------------------------------------------------------------------------
 # --- Import and clean data (importing csv into pandas) ------------------------
 # ------------------------------------------------------------------------------
@@ -54,23 +55,18 @@ df1_display['Date_string'] = df1_display['Date'].astype(str)
 print(df1_display.columns)
 print(df1_display)
 
-
-
-
 # ------------------------------------------------------------------------------
 # --- Define some static figures -----------------------------------------------
 # ------------------------------------------------------------------------------
-
 
 def director_scatter_vertical():
 	df2 = df1.copy()
 	df2['Worldwide box office (bln)'] = df2['Worldwide box office (bln)'].round(2)
 	fig = px.scatter(
 		df2, x='Worldwide box office (bln)', y='Director(s)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
-		# df2, x='Director(s)', y='Worldwide box office (bln)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
-		text='Worldwide box office (bln)',
 		title='Graph 1: box office per movies of each director', 
-		width=900, height=600)
+		# width=900, height=600, 
+		size='Worldwide box office (bln)')
 	fig.update_traces(textposition='middle right')
 	# Disable zoom into graph
 	fig.update_xaxes(fixedrange=True)
@@ -86,7 +82,7 @@ def profit():
 		df2, x='Box office / budget', y='Film', 
 		# color='Phase',
 		title='Graph 2: Most profitable movies (by box office / budget ratio) sorted in decreasing order',
-		width=900, height=600
+		# width=900, height=600
 	)
 	# Disable zoom into graph
 	fig.update_xaxes(fixedrange=True)
@@ -99,16 +95,58 @@ def profit():
 # ------------------------------------------------------------------------------
 
 
+SIDEBAR_STYLE = {
+	"position": "fixed", 
+	"top": 0, 
+	"left": 0, 
+	"bottom": 0, 
+	"width": "16rem", 
+	"padding": "2rem 1rem", 
+	"background-color": "#f8f9fa"
+}
+
+CONTENT_STYLE = {
+	"margin-left": "18rem", 
+	"margin-right": "2rem", 
+	"padding": "2rem 1rem",
+}
+
+sidebar = html.Div(
+	[
+		html.H2("Sidebar", className="display-4"),
+		html.Hr(),
+		html.P(
+			"Statistics and Data Visualisations on the major superhero movie franchises ", className="lead"
+		),
+		dbc.Nav(
+			[
+				dbc.NavLink("Home", href="/", active="exact"),
+				dbc.NavLink("MCU", href="/MCU-page", active="exact"),
+				dbc.NavLink("DC", href="/DC-page", active="exact"),
+			],
+			vertical=True,
+			pills=True,
+		),
+	],
+	style=SIDEBAR_STYLE,
+)
+
+content = html.Div(id="page-content", children=[], style=CONTENT_STYLE)
+
 app.layout = html.Div([
-	html.H1("Marvel Cinematic Universe (MCU) movies", style={
-		'color':'white', 'background-color':'darkred',
-		'text-align': 'center'
-		}), 
-	# html.H3('This is my personal dashboard project on visualising financial success of movies and different directors in the MCU', style={
-	# 	'text-align':'center'
-	# }),
+	dcc.Location(id="url"),
+	sidebar,
+	content
+])
+
+# PAGES
+
+Home_page = [
 	html.P(
-		"This is my personal project - a dashboard visualising statistics on financial success of movies and directors in the MCU.", 
+		"I love superhero movies and statistics. In this project, I use dashboard to investigate the former with the latter, and have fun in the process!",
+		style={'text-align':'center', 'font-size':'30px'}),
+	html.P(
+		"I will compare and contrast budgets and profits of movies in the two biggest superhero franchises - Marvel Cinematic Universe (MCU) and DC.",
 		style={'text-align':'center', 'font-size':'30px'}),
 	html.Div(
 		'Created by: Evgenii Zorin', 
@@ -126,26 +164,23 @@ app.layout = html.Div([
 	# 	target="_blank", # Open link in a new tab
 	# 	style={'textAlign':'center', 'font-size':'20px'}, 
 	# ),
+]
+
+MCU_page = [
+	# html.H1('MCU page', style={'textAlign':'center'}),
+	html.H1("Marvel Cinematic Universe (MCU) movies", style={
+	'color':'white', 'background-color':'darkred',
+	'text-align': 'center'
+	}), 
+	dcc.Graph(
+		id='static_1', figure=director_scatter_vertical(), 
+		style={'display':'inline-block', 'width':'50%'}
+		),
+	dcc.Graph(
+		id='static_2', figure=profit(), 
+		style={'display':'inline-block', 'width':'50%'}
+		),
 	html.Br(),
-	dcc.Graph(id='static_1', figure=director_scatter_vertical(), style={
-		'display':'inline-block', 'width':'50%'
-		}),
-	dcc.Graph(id='static_2', figure=profit(), style={
-		'display':'inline-block', 'width':'50%'
-		}),
-	html.Br(),
-	# dcc.Checklist(
-	# 	id='selectPhase', 
-	# 	options=[
-	# 		{'label': 'Phase 1', 'value': 1}, 
-	# 		{'label': 'Phase 2', 'value': 2}, 
-	# 		{'label': 'Phase 3', 'value': 3}], 
-	# 	value=[1, 2, 3], 
-	# 	style={'text-align':'center'}
-	# ), 
-	
-	# html.Br(),
-	# html.Div('', style={'display':'inline-block', 'width':'25%'}),
 	html.P('Graph 3: box office for each movie per phase', style={'text-align':'center', 'font-size':'25px'}), 
 	dcc.Checklist(
 		id='selectPhase', 
@@ -186,7 +221,47 @@ app.layout = html.Div([
 		style_header={'backgroundColor':'rgb(192,192,192)', 'text-align':'center'},
 		style_data={'backgroundColor':'rgb(224,224,224)', 'text-align':'center'}, 
 	)
-])
+]
+
+DC_page = [
+	html.P('This section is under development', style={'text-align':'center', 'font-size':'25px'})
+]
+
+@app.callback(
+	Output("page-content", "children"),
+	[Input("url", "pathname")]
+)
+def render_page_content(pathname):
+	if pathname == "/":
+		# return MCU_page
+		return Home_page
+		# return [
+		#         html.H1('Home page',
+		#                 style={'textAlign':'center'}),
+		#         # dcc.Graph(id='bargraph',
+		#         #          figure=px.bar(df, barmode='group', x='Years',
+		#         #          y=['Girls Kindergarten', 'Boys Kindergarten']))
+		#         ]
+	elif pathname == "/MCU-page":
+		return MCU_page
+		# return [
+		# 		html.H1('Page 1',
+		# 				style={'textAlign':'center'}),
+		# 		# dcc.Graph(id='bargraph',
+		# 		#          figure=px.bar(df, barmode='group', x='Years',
+		# 		#          y=['Girls Grade School', 'Boys Grade School']))
+		# 		]
+	elif pathname == "/DC-page":
+		return DC_page
+	# If the user tries to reach a different page, return a 404 message
+	return dbc.Jumbotron(
+		[
+			html.H1("404: Not found", className="text-danger"),
+			html.Hr(),
+			html.P(f"The pathname {pathname} was not recognised..."),
+		]
+	)
+
 
 # ------------------------------------------------------------------------------
 # --- Connect the Plotly graphs with Dash Components ---------------------------
@@ -228,7 +303,7 @@ def phase_barplot(selectPhase):
 		# color_discrete_sequence=["red", "green", "blue", "goldenrod", "magenta"],
 	)
 	fig.update_layout(
-		height=500, width=1900, 
+		# height=500, width=1900, 
 		uniformtext_minsize=10, uniformtext_mode='hide' # uniformtext_mode = 'show', 'hide'
 	)
 	fig.update_traces(
@@ -244,7 +319,7 @@ def phase_barplot(selectPhase):
 	output_choiceStr = f"You have chosen: {sorted(selectPhase)}"
 	return output_choiceStr, fig
 
+
 # ------------------------------------------------------------------------------
-if __name__ == '__main__':
-	# Run the app on server (browser)
+if __name__=='__main__':
 	app.run_server(debug=True)
