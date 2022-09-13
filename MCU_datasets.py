@@ -173,27 +173,29 @@ MCU_page = [
 	}), 
 	dcc.Graph(
 		id='static_1', figure=director_scatter_vertical(), 
-		style={'display':'inline-block', 'width':'50%'}
+		style={'display':'inline-block', 'width':'50%', 'height': '68vh'}
 		),
 	dcc.Graph(
 		id='static_2', figure=profit(), 
-		style={'display':'inline-block', 'width':'50%'}
+		style={'display':'inline-block', 'width':'50%', 'height': '68vh'}
 		),
 	html.Br(),
 	html.P('Graph 3: box office for each movie per phase', style={'text-align':'center', 'font-size':'25px'}), 
-	dcc.Checklist(
-		id='selectPhase', 
-		options=[
-			{'label': 'Phase 1', 'value': 1}, 
-			{'label': 'Phase 2', 'value': 2}, 
-			{'label': 'Phase 3', 'value': 3}], 
-		value=[1, 2, 3], 
-		style={'text-align':'center', 'display':'inline-block', 'width':'30%'}
-	), 
-	# html.P('asdf', style={'display':'inline-block', 'width':'70%'}), 
-	html.Div(id='output_choiceStr', children=[], style={'display':'inline-block', 'width':'70%'}), # You have chosen: 
+	html.Div([
+		dcc.Checklist(
+			id='selectPhase', 
+			options=[
+				{'label': ' Phase 1', 'value': 1}, 
+				{'label': ' Phase 2', 'value': 2}, 
+				{'label': ' Phase 3', 'value': 3}, 
+				{'label': ' Phase 4', 'value': 4}], 
+			value=[1, 2, 3, 4], 
+			style={"display":"block"}
+			# style={'text-align':'center', 'display':'inline-block', 'width':'30%'}
+		),
+		], style={'width':'5%'}),
 	html.Br(),
-	dcc.Graph(id='selectPhase_barplot', figure={}),
+	dcc.Graph(id='selectPhase_lineplot', figure={}),
 
 	# html.Div('', style={'display':'inline-block', 'width':'10%'}),
 	#
@@ -266,57 +268,70 @@ def render_page_content(pathname):
 # --- Connect the Plotly graphs with Dash Components ---------------------------
 # ------------------------------------------------------------------------------
 @app.callback(
-	[
-		Output(component_id='output_choiceStr', component_property='children'),
-		Output(component_id='selectPhase_barplot', component_property='figure')], 
+	Output(component_id='selectPhase_lineplot', component_property='figure'), 
+	# [
+	# 	# Output(component_id='output_choiceStr', component_property='children'),
+	# 	Output(component_id='selectPhase_lineplot', component_property='figure')], 
 	[Input(component_id='selectPhase', component_property='value')]
 )
-# def phase_lineplot(selectPhase):
-# 	df2 = df1.copy()
-# 	df2 = df2[df2['Phase'].isin(selectPhase)]
-# 	fig = px.line(
-# 		# df2, x='Date', y='Worldwide box office (bln)', color='Phase',
-# 		df2, x='Worldwide box office (bln)', y='Date', color='Phase', 
-# 		text='Film', title='Graph 3: box office for each movie per phase',
-# 	)
-# 	fig.update_layout(
-# 		height=1200, width=1000, 
-# 		# yaxis=dict(tickmode='linear', tick0=2008, dtick=1)
-# 	)
-# 	# fig.update_traces(textposition='middle right')
-# 	fig.update_yaxes(dtick="M12", tickformat="%Y")
+def phase_lineplot(selectPhase):
+	df2 = df1.copy()
+	df2 = df2[df2['Phase'].isin(selectPhase)]
+	fig = px.line(
+		# df2, x='Date', y='Worldwide box office (bln)', color='Phase',
+		df2, y='Worldwide box office (bln)', x='Date', color='Phase', 
+		# text='Film', 
+		hover_name='Film',
+		title='',
+	)
+	fig.update_traces(mode="markers+lines")
+	fig.update_layout(
+		hoverlabel=dict(
+			bgcolor="white",
+			font_size=14,
+			# font_family="Times New Roman"
+		)
+	)
+
+	# fig.update_layout(
+	# 	# height=1200, width=1000, 
+	# 	# yaxis=dict(tickmode='linear', tick0=2008, dtick=1)
+	# 	uniformtext_minsize=10, uniformtext_mode='hide'
+	# )
+	# fig.update_traces(textposition='middle right')
+	fig.update_xaxes(dtick="M12", tickformat="%Y")
+	fig.update_xaxes(fixedrange=True)
+	fig.update_yaxes(fixedrange=True)
+	return fig
 # 	yearZero = df2['Date'].min().strftime('%Y')
 # 	print(yearZero)
 # 	output_choiceStr = f"You have chosen: {sorted(selectPhase)}"
 # 	return output_choiceStr, fig
-def phase_barplot(selectPhase):
-	df2 = df1.copy()
-	df2 = df2[df2['Phase'].isin(selectPhase)]
-	# print(df2.dtypes)
-	df2['Phase'] = df2['Phase'].astype(str) 
-	fig = px.bar(
-		df2, x='Date', y='Worldwide box office (bln)', color='Phase',
-		text='Film', 
-		# text_auto='.2s',
-		title='',
-		# color_discrete_sequence=["red", "green", "blue", "goldenrod", "magenta"],
-	)
-	fig.update_layout(
-		# height=500, width=1900, 
-		uniformtext_minsize=10, uniformtext_mode='hide' # uniformtext_mode = 'show', 'hide'
-	)
-	fig.update_traces(
-		textposition='outside', 
-		# textangle=270
-		textangle=340
-	)
-	fig.update_xaxes(dtick="M12", tickformat="%Y")
-	fig.update_xaxes(fixedrange=True)
-	fig.update_yaxes(fixedrange=True)
-	yearZero = df2['Date'].min().strftime('%Y')
-	print(yearZero)
-	output_choiceStr = f"You have chosen: {sorted(selectPhase)}"
-	return output_choiceStr, fig
+# def phase_barplot(selectPhase):
+# 	df2 = df1.copy()
+# 	df2 = df2[df2['Phase'].isin(selectPhase)]
+# 	# print(df2.dtypes)
+# 	df2['Phase'] = df2['Phase'].astype(str) 
+# 	fig = px.bar(
+# 		df2, x='Date', y='Worldwide box office (bln)', color='Phase',
+# 		text='Film', 
+# 		# text_auto='.2s',
+# 		title='',
+# 		# color_discrete_sequence=["red", "green", "blue", "goldenrod", "magenta"],
+# 	)
+# 	fig.update_layout(
+# 		# height=500, width=1900, 
+# 		uniformtext_minsize=10, uniformtext_mode='hide' # uniformtext_mode = 'show', 'hide'
+# 	)
+# 	fig.update_traces(
+# 		textposition='outside', 
+# 		textangle=340
+# 	)
+# 	fig.update_xaxes(dtick="M12", tickformat="%Y")
+# 	fig.update_xaxes(fixedrange=True)
+# 	fig.update_yaxes(fixedrange=True)
+# 	yearZero = df2['Date'].min().strftime('%Y')
+# 	return fig
 
 
 # ------------------------------------------------------------------------------
