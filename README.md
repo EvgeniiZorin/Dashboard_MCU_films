@@ -1,10 +1,18 @@
-# Marvel Cinematic Universe (MCU) movies dashboard
+# Dashboard of superhero movie franchises profitability - MCU and DC
 
-This is an online dashboard which investigates the budget and box office of movies in the MCU, by year and director. 
+This is an online dashboard which investigates the profitability of movies in the biggest superhero movie franchises - MCU and DC. Profitability is assessed by the following criteria:
+- Budget, box office; 
+- Ratio of the two; 
 
-The project can be accessed via the following link: [vzem.pythonanywhere.com](http://vzem.pythonanywhere.com/)
+The project can be viewed via the following link: [vzem.pythonanywhere.com](http://vzem.pythonanywhere.com/)
 
 _**Please note**: for the best experience view on your PC. If you would like to view it on mobile, please switch to the 'Desktop Mode'._
+
+## Data Collection
+
+Data was scraped from wikipedia and other resources by using Pandas. 
+
+The protocol for data collection and cleaning can be seen in `Data_proc.ipynb`.
 
 ## Requirements
 

@@ -6,14 +6,13 @@ import dash_bootstrap_components as dbc
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
-
 app.config['suppress_callback_exceptions'] = True
+
 # ------------------------------------------------------------------------------
 # --- Import and clean data (importing csv into pandas) ------------------------
 # ------------------------------------------------------------------------------
+
 df = pd.read_csv('https://raw.githubusercontent.com/EvgeniiZorin/MCU_films_dashboard/main/MCU_dataset.tsv', sep='\t', skiprows=2)
-
-
 df1 = df.copy()
 # Replace all "and" and "&" with a comma, 
 # except for in the case of "Anthony and Joe Russo", because in the MCU they are called by everyone as "the Russo brothers" as they work on everything together
