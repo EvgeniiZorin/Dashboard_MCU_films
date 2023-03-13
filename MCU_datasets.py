@@ -1,8 +1,11 @@
 import pandas as pd
+
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, dash_table
 import dash_bootstrap_components as dbc
+
+import styles
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
@@ -110,33 +113,27 @@ CONTENT_STYLE = {
 	"padding": "2rem 1rem",
 }
 
-sidebar = html.Div(
-	[
-		html.H2("Sidebar", className="display-4"),
-		html.Hr(),
-		html.P(
-			"Statistics and Data Visualisations on the major superhero movie franchises ", className="lead"
-		),
-		dbc.Nav(
-			[
-				dbc.NavLink("Home", href="/", active="exact"),
-				dbc.NavLink("MCU", href="/MCU-page", active="exact"),
-				dbc.NavLink("DC", href="/DC-page", active="exact"),
-			],
-			vertical=True,
-			pills=True,
-		),
-	],
-	style=SIDEBAR_STYLE,
-)
+
+app.layout = html.Div([
+	html.H1(
+		children='Dashboard for the Iris dataset'
+	),
+	dbc.Tabs(
+		[
+			dbc.Tab(label="Home", tab_id="home"),
+			dbc.Tab(label="MCU", tab_id="MCU-page"),
+			dbc.Tab(label="DC", tab_id="DC-page")
+		],
+		id="tabs",
+		active_tab="home"
+	),
+	html.Div(id="tab-content", className="p-4"),
+])
+
+
 
 content = html.Div(id="page-content", children=[], style=CONTENT_STYLE)
 
-app.layout = html.Div([
-	dcc.Location(id="url"),
-	sidebar,
-	content
-])
 
 # PAGES
 
@@ -229,11 +226,11 @@ DC_page = [
 ]
 
 @app.callback(
-	Output("page-content", "children"),
-	[Input("url", "pathname")]
+	Output("tab-content", "children"),
+	Input("tabs", "active_tab")
 )
-def render_page_content(pathname):
-	if pathname == "/":
+def render_page_content(active_tab):
+	if active_tab == "home":
 		# return MCU_page
 		return Home_page
 		# return [
@@ -243,7 +240,7 @@ def render_page_content(pathname):
 		#         #          figure=px.bar(df, barmode='group', x='Years',
 		#         #          y=['Girls Kindergarten', 'Boys Kindergarten']))
 		#         ]
-	elif pathname == "/MCU-page":
+	elif active_tab == "MCU-page":
 		return MCU_page
 		# return [
 		# 		html.H1('Page 1',
@@ -252,16 +249,9 @@ def render_page_content(pathname):
 		# 		#          figure=px.bar(df, barmode='group', x='Years',
 		# 		#          y=['Girls Grade School', 'Boys Grade School']))
 		# 		]
-	elif pathname == "/DC-page":
+	elif active_tab == "DC-page":
 		return DC_page
-	# If the user tries to reach a different page, return a 404 message
-	return dbc.Jumbotron(
-		[
-			html.H1("404: Not found", className="text-danger"),
-			html.Hr(),
-			html.P(f"The pathname {pathname} was not recognised..."),
-		]
-	)
+
 
 
 # ------------------------------------------------------------------------------
