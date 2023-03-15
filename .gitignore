@@ -1,4 +1,11 @@
+# Compiled files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
 venv
-*.pyc
-.DS_Store
 .env
+
+# Scrap notebook
+checks.ipynb
+

@@ -6,6 +6,8 @@ from dash import Dash, dcc, html, Input, Output, dash_table
 import dash_bootstrap_components as dbc
 
 import styles
+import fetch_dataset
+import pages
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
@@ -14,48 +16,8 @@ app.config['suppress_callback_exceptions'] = True
 # ------------------------------------------------------------------------------
 # --- Import and clean data (importing csv into pandas) ------------------------
 # ------------------------------------------------------------------------------
+df1, df1_display = fetch_dataset.main()
 
-df = pd.read_csv('https://raw.githubusercontent.com/EvgeniiZorin/MCU_films_dashboard/main/MCU_dataset.tsv', sep='\t', skiprows=2)
-df1 = df.copy()
-# Replace all "and" and "&" with a comma, 
-# except for in the case of "Anthony and Joe Russo", because in the MCU they are called by everyone as "the Russo brothers" as they work on everything together
-df1['Director(s)'] = df1['Director(s)'].str.replace("&| &| ," , ",")
-df1['Producer(s)'] = df1['Producer(s)'].str.replace(", and| and", ",")
-# Next, let's change datatype of "Date" column into Datetime:
-df1['Date'] = pd.to_datetime(df1['Date'])
-df1['Year'] = df1['Date'].dt.strftime('%Y')
-# Next, let's convert columns "Production budget" and "Worldwide box office" into datatype "Int":
-df1['Production budget'] = df1['Production budget'].str.replace(',', '') # remove commas
-df1['Production budget'] = df1['Production budget'].astype(int)
-df1['Production budget (mln)'] = df1['Production budget'] / 1000000
-df1['Worldwide box office'] = df1['Worldwide box office'].str.replace(',', '') 
-df1['Worldwide box office'] = df1['Worldwide box office'].astype(float)
-df1['Worldwide box office (bln)'] = df1['Worldwide box office'] / 1000000000
-df1['Worldwide box office (mln)'] = df1['Worldwide box office'] / 1000000
-# Let's create a new column with names of movies which have more than 1 bln box officce
-# df1['Film bln'] = df1['Worldwide box office'] > 1000000000
-df1['Film bln'] = ''
-for index, row in df1.iterrows():
-	if row['Worldwide box office'] >= 1000000000:
-		# df['Film bln'].iloc[index] = row['Film']
-		print(row['Film'])
-		df1['Film bln'].iloc[index] = row['Film']
-	# else:
-	# 	df1['Film bln'].iloc[index] = ''
-
-# Also, let's separate the column "Phase (Saga)" into two columns - "Phase" and "Saga"
-df1[['Phase', 'Saga']] = df1['Phase (Saga)'].str.split('(', expand=True)
-df1['Phase'] = df1['Phase'].str.replace(' ', '')
-df1['Phase'] = df1['Phase'].astype(int)
-df1['Saga'] = df1['Saga'].str.replace(')', '')
-
-
-# df1_display is the version for displaying in the dashboard
-df1_display = df1.copy()
-df1_display['Date_pretty'] = df1_display['Date'].dt.strftime('%d %b %Y')
-df1_display['Date_string'] = df1_display['Date'].astype(str)
-print(df1_display.columns)
-print(df1_display)
 
 # ------------------------------------------------------------------------------
 # --- Define some static figures -----------------------------------------------
@@ -97,26 +59,9 @@ def profit():
 # ------------------------------------------------------------------------------
 
 
-SIDEBAR_STYLE = {
-	"position": "fixed", 
-	"top": 0, 
-	"left": 0, 
-	"bottom": 0, 
-	"width": "16rem", 
-	"padding": "2rem 1rem", 
-	"background-color": "#f8f9fa"
-}
-
-CONTENT_STYLE = {
-	"margin-left": "18rem", 
-	"margin-right": "2rem", 
-	"padding": "2rem 1rem",
-}
-
-
 app.layout = html.Div([
 	html.H1(
-		children='Dashboard for the Iris dataset'
+		children='Dashboard for the Superhero Movie Universes - MCU and DCEU'
 	),
 	dbc.Tabs(
 		[
@@ -130,37 +75,60 @@ app.layout = html.Div([
 	html.Div(id="tab-content", className="p-4"),
 ])
 
-
-
-content = html.Div(id="page-content", children=[], style=CONTENT_STYLE)
+# content = html.Div(id="page-content", children=[], style=styles.CONTENT_STYLE)
 
 
 # PAGES
 
-Home_page = [
-	html.P(
-		"I love superhero movies and statistics. In this project, I use dashboard to investigate the former with the latter, and have fun in the process!",
-		style={'text-align':'center', 'font-size':'30px'}),
-	html.P(
-		"I will compare and contrast budgets and profits of movies in the two biggest superhero franchises - Marvel Cinematic Universe (MCU) and DC.",
-		style={'text-align':'center', 'font-size':'30px'}),
-	html.Div(
-		'Created by: Evgenii Zorin', 
-		style={'text-align':'center', 'font-size':'20px'}
-	),
-	html.Div([
-		html.A(
-		'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
-		target="_blank", # Open link in a new tab
-		# style={'textAlign':'center', 'font-size':'20px'}, 
-	),
-	], style={'font-size':'20px', "display": "flex", "justifyContent": "center"}),
-	# html.A(
-	# 	'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
-	# 	target="_blank", # Open link in a new tab
-	# 	style={'textAlign':'center', 'font-size':'20px'}, 
-	# ),
-]
+# Home_page = [
+# 	dbc.Container([
+# 		html.H1("Home Page", style={'text-align':'center'}),
+# 		html.Br(),
+# 		dcc.Markdown("""
+# 		The two things that are among my favourites are Statistics and Superhero movies. 
+		
+# 		In this Interactive Dashboard, I will analyse the data about the superhero movies using my best Statistical knowledge!
+		
+# 		I will compare and contrast budgets and profits of movies in the two biggest superhero franchises - Marvel Cinematic Universe (MCU) and DC.
+
+
+# 		""", style={'font-size':'30px'}),
+# 		html.Br(),
+# 		html.Div("Created by Evgenii Zorin", style={'text-align':'center', 'font-size':'20px'}),
+# 		html.Div([
+# 			html.A(
+# 			'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
+# 			target="_blank", # Open link in a new tab
+# 			# style={'textAlign':'center', 'font-size':'20px'}, 
+# 		),
+# 		], style={'font-size':'20px', "display": "flex", "justifyContent": "center"}),
+# 	])
+# ]
+
+# # Home_page = [
+# # 	html.P(
+# # 		"I love superhero movies and statistics. In this project, I use dashboard to investigate the former with the latter, and have fun in the process!",
+# # 		style={'text-align':'center', 'font-size':'30px'}),
+# # 	html.P(
+# # 		"I will compare and contrast budgets and profits of movies in the two biggest superhero franchises - Marvel Cinematic Universe (MCU) and DC.",
+# # 		style={'text-align':'center', 'font-size':'30px'}),
+# # 	html.Div(
+# # 		'Created by: Evgenii Zorin', 
+# # 		style={'text-align':'center', 'font-size':'20px'}
+# # 	),
+# 	# html.Div([
+# 	# 	html.A(
+# 	# 	'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
+# 	# 	target="_blank", # Open link in a new tab
+# 	# 	# style={'textAlign':'center', 'font-size':'20px'}, 
+# 	# ),
+# 	# ], style={'font-size':'20px', "display": "flex", "justifyContent": "center"}),
+# 	# # html.A(
+# 	# # 	'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
+# 	# # 	target="_blank", # Open link in a new tab
+# 	# # 	style={'textAlign':'center', 'font-size':'20px'}, 
+# 	# # ),
+# # ]
 
 MCU_page = [
 	# html.H1('MCU page', style={'textAlign':'center'}),
@@ -168,6 +136,10 @@ MCU_page = [
 	'color':'white', 'background-color':'darkred',
 	'text-align': 'center'
 	}), 
+	dcc.Graph(
+		id='static_1', figure=director_scatter_vertical()
+	),
+	html.Br(),
 	dcc.Graph(
 		id='static_1', figure=director_scatter_vertical(), 
 		style={'display':'inline-block', 'width':'50%', 'height': '68vh'}
@@ -231,8 +203,8 @@ DC_page = [
 )
 def render_page_content(active_tab):
 	if active_tab == "home":
-		# return MCU_page
-		return Home_page
+		# return Home_page
+		return pages.Home_page
 		# return [
 		#         html.H1('Home page',
 		#                 style={'textAlign':'center'}),
