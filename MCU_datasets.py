@@ -13,46 +13,6 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 app.config['suppress_callback_exceptions'] = True
 
-# ------------------------------------------------------------------------------
-# --- Import and clean data (importing csv into pandas) ------------------------
-# ------------------------------------------------------------------------------
-df1, df1_display = fetch_dataset.main()
-
-
-# ------------------------------------------------------------------------------
-# --- Define some static figures -----------------------------------------------
-# ------------------------------------------------------------------------------
-
-def director_scatter_vertical():
-	df2 = df1.copy()
-	df2['Worldwide box office (bln)'] = df2['Worldwide box office (bln)'].round(2)
-	fig = px.scatter(
-		df2, x='Worldwide box office (bln)', y='Director(s)', color='Worldwide box office (bln)', color_continuous_scale='OrRd', range_color=[0.2, 1],
-		title='Graph 1: box office per movies of each director', 
-		# width=900, height=600, 
-		size='Worldwide box office (bln)')
-	fig.update_traces(textposition='middle right')
-	# Disable zoom into graph
-	fig.update_xaxes(fixedrange=True)
-	fig.update_yaxes(fixedrange=True)
-	return fig
-
-def profit():
-	df2 = df1.copy()
-	df2['Phase'] = df2['Phase'].astype(str)
-	df2['Box office / budget'] = df2['Worldwide box office'] / df2['Production budget']
-	df2.sort_values(by='Box office / budget', ascending=True, inplace=True)
-	fig = px.bar(
-		df2, x='Box office / budget', y='Film', 
-		# color='Phase',
-		title='Graph 2: Most profitable movies (by box office / budget ratio) sorted in decreasing order',
-		# width=900, height=600
-	)
-	# Disable zoom into graph
-	fig.update_xaxes(fixedrange=True)
-	fig.update_yaxes(fixedrange=True)
-	return fig
-
 
 # ------------------------------------------------------------------------------
 # --- App Layout ---------------------------------------------------------------
@@ -67,7 +27,8 @@ app.layout = html.Div([
 		[
 			dbc.Tab(label="Home", tab_id="home"),
 			dbc.Tab(label="MCU", tab_id="MCU-page"),
-			dbc.Tab(label="DC", tab_id="DC-page")
+			dbc.Tab(label="DC", tab_id="DC-page"),
+			dbc.Tab(label="Data tables", tab_id="Data-tables")
 		],
 		id="tabs",
 		active_tab="home"
@@ -75,127 +36,8 @@ app.layout = html.Div([
 	html.Div(id="tab-content", className="p-4"),
 ])
 
-# content = html.Div(id="page-content", children=[], style=styles.CONTENT_STYLE)
 
 
-# PAGES
-
-# Home_page = [
-# 	dbc.Container([
-# 		html.H1("Home Page", style={'text-align':'center'}),
-# 		html.Br(),
-# 		dcc.Markdown("""
-# 		The two things that are among my favourites are Statistics and Superhero movies. 
-		
-# 		In this Interactive Dashboard, I will analyse the data about the superhero movies using my best Statistical knowledge!
-		
-# 		I will compare and contrast budgets and profits of movies in the two biggest superhero franchises - Marvel Cinematic Universe (MCU) and DC.
-
-
-# 		""", style={'font-size':'30px'}),
-# 		html.Br(),
-# 		html.Div("Created by Evgenii Zorin", style={'text-align':'center', 'font-size':'20px'}),
-# 		html.Div([
-# 			html.A(
-# 			'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
-# 			target="_blank", # Open link in a new tab
-# 			# style={'textAlign':'center', 'font-size':'20px'}, 
-# 		),
-# 		], style={'font-size':'20px', "display": "flex", "justifyContent": "center"}),
-# 	])
-# ]
-
-# # Home_page = [
-# # 	html.P(
-# # 		"I love superhero movies and statistics. In this project, I use dashboard to investigate the former with the latter, and have fun in the process!",
-# # 		style={'text-align':'center', 'font-size':'30px'}),
-# # 	html.P(
-# # 		"I will compare and contrast budgets and profits of movies in the two biggest superhero franchises - Marvel Cinematic Universe (MCU) and DC.",
-# # 		style={'text-align':'center', 'font-size':'30px'}),
-# # 	html.Div(
-# # 		'Created by: Evgenii Zorin', 
-# # 		style={'text-align':'center', 'font-size':'20px'}
-# # 	),
-# 	# html.Div([
-# 	# 	html.A(
-# 	# 	'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
-# 	# 	target="_blank", # Open link in a new tab
-# 	# 	# style={'textAlign':'center', 'font-size':'20px'}, 
-# 	# ),
-# 	# ], style={'font-size':'20px', "display": "flex", "justifyContent": "center"}),
-# 	# # html.A(
-# 	# # 	'Link to the source code', href='https://github.com/EvgeniiZorin/MCU_films_dashboard', 
-# 	# # 	target="_blank", # Open link in a new tab
-# 	# # 	style={'textAlign':'center', 'font-size':'20px'}, 
-# 	# # ),
-# # ]
-
-MCU_page = [
-	# html.H1('MCU page', style={'textAlign':'center'}),
-	html.H1("Marvel Cinematic Universe (MCU) movies", style={
-	'color':'white', 'background-color':'darkred',
-	'text-align': 'center'
-	}), 
-	dcc.Graph(
-		id='static_1', figure=director_scatter_vertical()
-	),
-	html.Br(),
-	dcc.Graph(
-		id='static_1', figure=director_scatter_vertical(), 
-		style={'display':'inline-block', 'width':'50%', 'height': '68vh'}
-		),
-	dcc.Graph(
-		id='static_2', figure=profit(), 
-		style={'display':'inline-block', 'width':'50%', 'height': '68vh'}
-		),
-	html.Br(),
-	html.P('Graph 3: box office for each movie per phase', style={'text-align':'center', 'font-size':'25px'}), 
-	html.Div([
-		dcc.Checklist(
-			id='selectPhase', 
-			options=[
-				{'label': ' Phase 1', 'value': 1}, 
-				{'label': ' Phase 2', 'value': 2}, 
-				{'label': ' Phase 3', 'value': 3}, 
-				{'label': ' Phase 4', 'value': 4}], 
-			value=[1, 2, 3, 4], 
-			style={"display":"block"}
-			# style={'text-align':'center', 'display':'inline-block', 'width':'30%'}
-		),
-		], style={'width':'5%'}),
-	html.Br(),
-	dcc.Graph(id='selectPhase_lineplot', figure={}),
-
-	# html.Div('', style={'display':'inline-block', 'width':'10%'}),
-	#
-	# html.Div(id='')
-	html.Br(), 
-	html.Div('Below you can see the full data table', style={'text-align':'center', 'font-size':'30px'}),
-	html.Br(),
-	dash_table.DataTable(
-		data=df1_display.to_dict('records'),
-		# columns=[{'name':i, 'id':i} for i in df1.columns()],
-		sort_action='native',
-		columns=[
-			{'name':'Date', 'id':'Date_string', 'type':'datetime'}, 
-			{'name':'Film', 'id':'Film'},
-			{'name':'Phase', 'id':'Phase'}, 
-			{'name':'Saga', 'id':'Saga'}, 
-			{'name':'Director(s)', 'id':'Director(s)'}, 
-			{'name':'Producer(s)', 'id': 'Producer(s)'},
-			{'name':'Production budget (mln)', 'id':'Production budget (mln)'}, 
-			{'name':'Worldwide box office (mln)', 'id':'Worldwide box office (mln)'}
-		],
-		# style_header={'backgroundColor':'rgb(30,30,30)', 'color':'white'},
-		# style_data={'backgroundColor':'rgb(50,50,50)', 'color':'white'}
-		style_header={'backgroundColor':'rgb(192,192,192)', 'text-align':'center'},
-		style_data={'backgroundColor':'rgb(224,224,224)', 'text-align':'center'}, 
-	)
-]
-
-DC_page = [
-	html.P('This section is under development', style={'text-align':'center', 'font-size':'25px'})
-]
 
 @app.callback(
 	Output("tab-content", "children"),
@@ -203,7 +45,6 @@ DC_page = [
 )
 def render_page_content(active_tab):
 	if active_tab == "home":
-		# return Home_page
 		return pages.Home_page
 		# return [
 		#         html.H1('Home page',
@@ -213,16 +54,11 @@ def render_page_content(active_tab):
 		#         #          y=['Girls Kindergarten', 'Boys Kindergarten']))
 		#         ]
 	elif active_tab == "MCU-page":
-		return MCU_page
-		# return [
-		# 		html.H1('Page 1',
-		# 				style={'textAlign':'center'}),
-		# 		# dcc.Graph(id='bargraph',
-		# 		#          figure=px.bar(df, barmode='group', x='Years',
-		# 		#          y=['Girls Grade School', 'Boys Grade School']))
-		# 		]
+		return pages.MCU_page
 	elif active_tab == "DC-page":
-		return DC_page
+		return pages.DC_page
+	elif active_tab == "Data-tables":
+		return pages.Data_tables
 
 
 
@@ -237,6 +73,7 @@ def render_page_content(active_tab):
 	[Input(component_id='selectPhase', component_property='value')]
 )
 def phase_lineplot(selectPhase):
+	df1, df1_display = fetch_dataset.main()
 	df2 = df1.copy()
 	df2 = df2[df2['Phase'].isin(selectPhase)]
 	fig = px.line(
