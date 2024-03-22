@@ -9,7 +9,11 @@ import styles
 import fetch_dataset
 import pages
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(
+	__name__, 
+	external_stylesheets=[dbc.themes.BOOTSTRAP],
+	assets_folder = 'assets'
+)
 server = app.server
 app.config['suppress_callback_exceptions'] = True
 

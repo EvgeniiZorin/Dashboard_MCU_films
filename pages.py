@@ -70,6 +70,7 @@ MCU_page = [
 		'color':'white', 'background-color':'darkred',
 		'text-align': 'center'
 		}), 
+		html.Button('create pdf', id='run'),
 		dcc.Graph(
 			id='static_1', figure=director_scatter_vertical()
 		)
